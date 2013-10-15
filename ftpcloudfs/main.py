@@ -99,6 +99,7 @@ class Main(object):
                                   'keystone-tenant-separator': default_ks_tenant_separator,
                                   'keystone-service-type': default_ks_service_type,
                                   'keystone-endpoint-type': default_ks_endpoint_type,
+                                  'override-url': None,
                                  })
         config.read(default_config_file)
         if not config.has_section('ftpcloudfs'):
@@ -213,6 +214,12 @@ class Main(object):
                           default=self.config.get('ftpcloudfs', 'keystone-endpoint-type'),
                           help="Endpoint type to be used in auth 2.0 (default: %s)" % default_ks_endpoint_type)
 
+        parser.add_option('--override-url',
+                          type="str",
+                          dest="override_url",
+                          default=self.config.get('ftpcloudfs', 'override-url'),
+                          help="Override the object store url.")
+
         (options, _) = parser.parse_args()
 
         if options.keystone:
@@ -237,6 +244,7 @@ class Main(object):
         ObjectStorageFtpFS.authurl = self.options.authurl
         ObjectStorageFtpFS.keystone = self.options.keystone
         ObjectStorageFtpFS.memcache_hosts = self.options.memcache
+        ObjectStorageFtpFS.override_url = self.options.override_url
 
         masquerade = self.config.get('ftpcloudfs', 'masquerade-firewall')
         if masquerade:

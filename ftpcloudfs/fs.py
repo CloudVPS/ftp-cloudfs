@@ -13,12 +13,14 @@ import stat
 import logging
 from errno import EPERM, ENOENT, EACCES, EIO, ENOTDIR, ENOTEMPTY
 from swiftclient.client import Connection, ClientException
+from swiftclient.client import http_connection as swiftclient_http_connection
 from chunkobject import ChunkObject
 from errors import IOSError
 import posixpath
 from utils import smart_str
 from functools import wraps
 import memcache
+import urlparse
 try:
     from hashlib import md5
 except ImportError:
@@ -41,8 +43,9 @@ class ProxyConnection(Connection):
     # max time to cache auth tokens (seconds), based on swift defaults
     TOKEN_TTL = 86400
 
-    def __init__(self, memcache, *args, **kwargs):
+    def __init__(self, memcache, override_url, *args, **kwargs):
         self.memcache = memcache
+        self.override_url = override_url
         self.real_ip = None
         self.range_from = None
         super(ProxyConnection, self).__init__(*args, **kwargs)
@@ -63,7 +66,27 @@ class ProxyConnection(Connection):
                 fn(method, url, body=body, headers=headers)
             return request_x_forwarded_for
 
-        parsed, conn = super(ProxyConnection, self).http_connection()
+        if self.override_url:
+            parsed = urlparse.urlparse(self.url)
+            actual_url = self.override_url % {
+                "scheme": parsed.scheme,
+                "netloc": parsed.netloc,
+                "path": parsed.path,
+                "params": parsed.params,
+                "query": parsed.query,
+                "fragment": parsed.fragment,
+                "username": parsed.username,
+                "password": parsed.password,
+                "hostname": parsed.hostname,
+                "port": parsed.port,
+            }
+
+            parsed, conn = swiftclient_http_connection(
+                actual_url, ssl_compression=self.ssl_compression)
+            logging.info("Overriding url to %s", actual_url)
+        else:
+            parsed, conn = super(ProxyConnection, self).http_connection()
+
         conn.request = request_wrapper(conn.request)
 
         return parsed, conn
@@ -490,6 +513,7 @@ class ObjectStorageFS(object):
     of the same name.
     """
     memcache_hosts = None
+    override_url = None
 
     @translate_objectstorage_error
     def __init__(self, username, api_key, authurl, keystone=None):
@@ -538,6 +562,7 @@ class ObjectStorageFS(object):
         self.conn = ProxyConnection(self._listdir_cache.memcache,
                                     user=username,
                                     key=api_key,
+                                    override_url=self.override_url,
                                     **kwargs
                                     )
         # force authentication

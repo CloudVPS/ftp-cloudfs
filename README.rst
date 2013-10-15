@@ -103,6 +103,8 @@ Options:
   --keystone-endpoint-type=ENDPOINT_TYPE
                         Endpoint type to be used in auth 2.0 (default:
                         publicURL)
+  --override-url=OVERRIDE_URL
+                        Override the object store url.
 
 The defaults can be changed using a configuration file (by default in
 /etc/ftpcloudfs.conf). Check the example file included in the package.
@@ -111,7 +113,7 @@ The defaults can be changed using a configuration file (by default in
 CACHE MANAGEMENT
 ================
 
-`OpenStack Object Storage (Swift)`_ is an object storage and not a real file system. 
+`OpenStack Object Storage (Swift)`_ is an object storage and not a real file system.
 This proxy simulates enough file system functionality to be used over FTP, but it
 has a performance impact.
 
@@ -145,6 +147,14 @@ separator). Please check the example configuration file for further details.
 .. _OpenStack Identity Service 2.0: http://docs.openstack.org/api/openstack-identity-service/2.0/content/index.html
 .. _RackSpace Cloud Files: http://www.rackspace.com/cloud/cloud_hosting_products/files/
 .. _Memset's Memstore Cloud Storage: https://www.memset.com/cloud/storage/
+
+
+URL OVERRIDING
+==============
+For some setups you may want to use a dedicated swiftproxy for your ftpcloudfs
+server. This can be done using `override-url`. If you e.g. installed the proxy
+on the same machine as ftpcloudfs, use `http://localhost%(path)s`, this will
+redirect all swift traffic to that proxy.
 
 
 SUPPORT
