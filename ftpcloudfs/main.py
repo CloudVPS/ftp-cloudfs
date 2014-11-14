@@ -85,6 +85,7 @@ class Main(object):
                                   'workers': None,
                                   'memcache': None,
                                   'max-cons-per-ip': '0',
+                                  'permit-foreign-addresses': False,
                                   'auth-url': None,
                                   'insecure': False,
                                   'service-net': None,
@@ -290,6 +291,7 @@ class Main(object):
         # set it to unlimited, we use our own checks with a shared dict
         ftpd.max_cons_per_ip = 0
         ftpd.handler.max_cons_per_ip = max_cons_per_ip
+        ftpd.permit_foreign_addresses = self.config.getboolean('ftpcloudfs', 'permit-foreign-addresses')
 
         return ftpd
 
