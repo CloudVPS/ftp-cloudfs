@@ -278,6 +278,8 @@ class Main(object):
             except (ValueError, TypeError):
                 sys.exit('Passive ports error: int:int expected')
 
+        MyFTPHandler.permit_foreign_addresses = self.config.getboolean('ftpcloudfs', 'permit-foreign-addresses')
+
         try:
             max_cons_per_ip = int(self.config.get('ftpcloudfs', 'max-cons-per-ip'))
         except ValueError, errmsg:
@@ -291,7 +293,6 @@ class Main(object):
         # set it to unlimited, we use our own checks with a shared dict
         ftpd.max_cons_per_ip = 0
         ftpd.handler.max_cons_per_ip = max_cons_per_ip
-        ftpd.permit_foreign_addresses = self.config.getboolean('ftpcloudfs', 'permit-foreign-addresses')
 
         return ftpd
 
